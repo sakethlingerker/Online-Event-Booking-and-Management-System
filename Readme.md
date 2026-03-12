@@ -1,5 +1,7 @@
 # Online Event Booking and Management System
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-on_Render-46E3B7?style=for-the-badge&logo=render)](https://online-events-app.onrender.com/)
+
 A full-stack web application designed to help users discover, book, and manage online events easily. This project has been structured using the MVC (Model-View-Controller) architecture to make it highly scalable and maintainable.
 
 ## 🌟 Key Features
@@ -50,7 +52,7 @@ A full-stack web application designed to help users discover, book, and manage o
 - [MySQL](https://www.mysql.com/) server running locally
 
 ### 2. Demo User Credentials
-If deploying or showcasing the app, the seed script automatically generates the following demo accounts (password is `password123` for all):
+If deploying or showcasing the app, the seed script automatically generates the following demo accounts :
 - **Admin**: `admin@eventhub.com`
 - **Organizer**: `organizer@eventhub.com`
 - **User**: `user@eventhub.com`
@@ -85,6 +87,9 @@ npm run dev
 Visit `http://localhost:3000` in your browser.
 
 ## 🌐 Deployment Guide (Online)
+
+**Update:** The application is now live! You can view the live deployment on Render here:
+🔗 **[Live Demo](https://online-events-app.onrender.com/)**
 
 This application is ready to be deployed to popular PaaS platforms like Render, Railway, or Heroku. Here is a guide for **Render & Aiven/PlanetScale (MySQL Database)**:
 
