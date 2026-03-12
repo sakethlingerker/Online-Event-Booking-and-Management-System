@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Events - EventHub</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ADD THIS LINE -->
+    <script src="/js/auth.js"></script>
+</head>
+
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">EventHub</div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/events.html" class="active">Events</a></li>
+                <li><a href="/my-bookings.html" id="navThirdLink">My Bookings</a></li>
+            </ul>
+            <div class="auth-buttons" id="authButtons">
+                <!-- This will be populated by auth.js -->
+            </div>
+        </div>
+    </header>
+
+    <section class="container">
+        <div
+            style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; flex-wrap: wrap; gap: 24px;">
+            <div>
+                <h2 style="text-align: left; margin-bottom: 8px;">All Upcoming Events</h2>
+                <p style="color: var(--gray);">Discover and book the most exclusive events.</p>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div style="position: relative;">
+                    <i class="fas fa-search"
+                        style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--gray-light);"></i>
+                    <input type="text" id="searchInput" placeholder="Search events..."
+                        style="padding: 12px 16px 12px 44px; border: 1px solid var(--gray-light); border-radius: var(--radius-sm); font-size: 0.875rem; width: 280px; outline: none; transition: var(--transition);">
+                </div>
+                <select id="categoryFilter"
+                    style="padding: 12px 16px; border: 1px solid var(--gray-light); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; outline: none; transition: var(--transition); color: var(--gray);">
+                    <option value="all">All Categories</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Learning">Learning</option>
+                    <option value="Culinary">Culinary</option>
+                    <option value="General">General</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="loadingMessage" class="alert alert-info" style="text-align: center;">
+            <p>Loading events...</p>
+        </div>
+
+        <div id="eventsContainer" class="events-grid" style="display: none;">
+            <!-- Events will be loaded by JavaScript -->
+        </div>
+
+        <div id="errorMessage" class="alert alert-danger" style="display: none; text-align: center;">
+            <!-- Error messages will be shown here -->
+        </div>
+    </section>
+
+    <div class="simple-footer">
+        <p>&copy; 2025 EventHub. All rights reserved.</p>
+    </div>
+
+    <script>
+        let allEvents = [];
+
+        // Load all events
+        async function loadEvents() {
+            try {
+                console.log('🔄 Loading events from API...');
+                document.getElementById('loadingMessage').style.display = 'block';
+                document.getElementById('eventsContainer').style.display = 'none';
+
+                const response = await fetch('/api/events');
+
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+
+                allEvents = await response.json();
+                console.log('✅ Events loaded:', allEvents);
+
+                // Hide loading message
+                document.getElementById('loadingMessage').style.display = 'none';
+
+                renderEvents(allEvents);
+
+            } catch (error) {
+                console.error('❌ Error loading events:', error);
+                document.getElementById('loadingMessage').style.display = 'none';
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.innerHTML = `
+                    <h3>Error Loading Events</h3>
+                    <p>${error.message}</p>
+                    <button onclick="loadEvents()" class="btn btn-primary">Retry</button>
+                `;
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        // Render events based on data
+        function renderEvents(events) {
+            const eventsContainer = document.getElementById('eventsContainer');
+
+            // Filter only approved
+            const approvedEvents = events.filter(event => event.status === 'approved');
+
+            if (approvedEvents.length === 0) {
+                eventsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 60px; grid-column: 1 / -1; background: white; border-radius: var(--radius); border: 1px dashed var(--gray-light);">
+                        <i class="fas fa-search" style="font-size: 3rem; color: var(--gray-light); margin-bottom: 16px;"></i>
+                        <h3>No events found</h3>
+                        <p style="color: var(--gray);">Try adjusting your search or filters.</p>
+                    </div>
+                `;
+            } else {
+                eventsContainer.innerHTML = '';
+                approvedEvents.forEach(event => {
+                    const eventDate = new Date(event.date).toLocaleDateString('en-US', {
+                        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+                    });
+                    const eventTime = new Date(event.date).toLocaleTimeString('en-US', {
+                        hour: '2-digit', minute: '2-digit'
+                    });
+
+                    const eventCard = `
+                        <div class="event-card">
+                            <div class="event-image" style="background-image: url('${event.image_url}');"></div>
+                            <div class="event-content">
+                                <span class="category-badge" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); font-weight: 700; margin-bottom: 8px; display: block;">${getCategory(event.title)}</span>
+                                <h3 class="event-title">${event.title}</h3>
+                                <div class="event-meta">
+                                    <span><i class="fas fa-calendar"></i> ${eventDate}</span>
+                                    <span><i class="fas fa-clock"></i> ${eventTime}</span>
+                                    <span><i class="fas fa-location-dot"></i> ${event.location}</span>
+                                </div>
+                                <p class="event-description">${event.description}</p>
+                                <div class="event-actions">
+                                    <span class="event-price">₹${event.price}</span>
+                                    <a href="/booking.html?eventId=${event.id}" class="btn btn-primary">Book Now</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    eventsContainer.innerHTML += eventCard;
+                });
+            }
+            eventsContainer.style.display = 'grid';
+        }
+
+        // Get category based on title
+        function getCategory(title) {
+            const lowerTitle = title.toLowerCase();
+            if (lowerTitle.includes('tech') || lowerTitle.includes('ai')) return 'Technology';
+            if (lowerTitle.includes('music') || lowerTitle.includes('fest')) return 'Entertainment';
+            if (lowerTitle.includes('workshop') || lowerTitle.includes('business')) return 'Learning';
+            if (lowerTitle.includes('food') || lowerTitle.includes('wine')) return 'Culinary';
+            return 'General';
+        }
+
+        // Filtering logic
+        function filterEvents() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+
+            const filtered = allEvents.filter(event => {
+                const matchesSearch = event.title.toLowerCase().includes(searchTerm) ||
+                    event.description.toLowerCase().includes(searchTerm) ||
+                    event.location.toLowerCase().includes(searchTerm);
+                const matchesCategory = category === 'all' || getCategory(event.title) === category;
+                return matchesSearch && matchesCategory;
+            });
+
+            renderEvents(filtered);
+        }
+
+        // Event listeners for filtering
+        document.getElementById('searchInput').addEventListener('input', filterEvents);
+        document.getElementById('categoryFilter').addEventListener('change', filterEvents);
+
+        // Load events when page loads
+        document.addEventListener('DOMContentLoaded', loadEvents);
+    </script>
+</body>
+
+</html>

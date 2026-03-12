@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub - Online Event Booking & Management</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/auth.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">EventHub</div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/events.html">Events</a></li>
+                <li><a href="/my-bookings.html" id="navThirdLink">My Bookings</a></li>
+            </ul>
+            <div class="auth-buttons" id="authButtons">
+                <!-- This will be populated by auth.js -->
+            </div>
+        </div>
+    </header>
+    <section class="hero">
+        <div class="container text-center">
+            <span class="badge"
+                style="background: rgba(99, 102, 241, 0.1); color: var(--primary); padding: 8px 16px; border-radius: 100px; font-weight: 600; font-size: 0.875rem; margin-bottom: 24px; display: inline-block; border: 1px solid rgba(99, 102, 241, 0.2);">✨
+                New: AI Summit 2025</span>
+            <h1>Extraordinary Experiences, <br><span style="color: var(--primary);">Delivered Seamlessly.</span></h1>
+            <p>Join thousands of attendees at the most exclusive conferences, festivals, and workshops worldwide. Your
+                next big inspiration starts here.</p>
+            <div style="display: flex; gap: 16px; justify-content: center;">
+                <a href="/events.html" class="btn btn-primary">Discover Events</a>
+                <a href="/register.html" class="btn btn-secondary">Join Community</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="container">
+        <h2 class="section-title">Featured Events</h2>
+        <div id="featuredEvents" class="events-grid">
+            <!-- Events will be loaded by JavaScript -->
+        </div>
+    </section>
+
+    <!-- ADD THIS SECTION AFTER FEATURED EVENTS -->
+    <section class="container" id="bookedEventsSection" style="display: none;">
+        <h2 class="section-title">Your Booked Events</h2>
+        <div id="bookedEvents" class="events-grid">
+            <!-- Booked events will be loaded here -->
+        </div>
+    </section>
+
+    <footer>
+        <div class="simple-footer">
+            <p>&copy; 2025 EventHub. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        // Load featured events
+        async function loadFeaturedEvents() {
+            try {
+                console.log('🔄 Loading featured events...');
+                const response = await fetch('/api/events');
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const events = await response.json();
+                console.log('✅ Events loaded:', events);
+
+                const featuredContainer = document.getElementById('featuredEvents');
+
+                if (!events || events.length === 0) {
+                    featuredContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; grid-column: 1 / -1;">
+                        <i class="fas fa-calendar-times" style="font-size: 3rem; color: var(--gray-light); margin-bottom: 15px;"></i>
+                        <h3 style="color: var(--dark); margin-bottom: 10px;">No Events Available</h3>
+                        <p style="color: var(--gray);">Check back later for new events!</p>
+                    </div>
+                `;
+                    return;
+                }
+
+                featuredContainer.innerHTML = '';
+
+                // Show only approved events, limit to 3
+                const approvedEvents = events.filter(event => event.status === 'approved').slice(0, 3);
+
+                if (approvedEvents.length === 0) {
+                    featuredContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; grid-column: 1 / -1;">
+                        <i class="fas fa-clock" style="font-size: 3rem; color: var(--gray-light); margin-bottom: 15px;"></i>
+                        <h3 style="color: var(--dark); margin-bottom: 10px;">No Approved Events Yet</h3>
+                        <p style="color: var(--gray);">Events are pending approval. Check back soon!</p>
+                    </div>
+                `;
+                    return;
+                }
+
+                approvedEvents.forEach(event => {
+                    const eventDate = new Date(event.date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    const eventTime = new Date(event.date).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    // Get appropriate event image
+                    const eventImage = event.image_url || getDefaultEventImage(event.title);
+
+                    const eventCard = `
+                    <div class="event-card">
+                        <div class="event-image" style="background-image: url('${eventImage}');"></div>
+                        <div class="event-content">
+                            <span class="category-badge" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); font-weight: 700; margin-bottom: 8px; display: block;">${getCategory(event.title)}</span>
+                            <h3 class="event-title">${event.title}</h3>
+                            <div class="event-meta">
+                                <span><i class="fas fa-calendar"></i> ${eventDate} at ${eventTime}</span>
+                                <span><i class="fas fa-location-dot"></i> ${event.location}</span>
+                            </div>
+                            <p class="event-description">${event.description || 'No description available.'}</p>
+                            <div class="event-actions">
+                                <span class="event-price">₹${event.price}</span>
+                                <a href="/booking.html?eventId=${event.id}" class="btn btn-primary">Book Now</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                    featuredContainer.innerHTML += eventCard;
+                });
+
+            } catch (error) {
+                console.error('❌ Error loading events:', error);
+                const featuredContainer = document.getElementById('featuredEvents');
+                featuredContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; grid-column: 1 / -1; color: var(--danger);">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                    <h3>Error Loading Events</h3>
+                    <p>${error.message}</p>
+                    <p>Please check if the server is running and try again.</p>
+                    <button onclick="loadFeaturedEvents()" class="btn btn-primary" style="margin-top: 15px;">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                </div>
+            `;
+            }
+        }
+
+        // Get category based on title
+        function getCategory(title) {
+            const lowerTitle = title.toLowerCase();
+            if (lowerTitle.includes('tech') || lowerTitle.includes('ai')) return 'Technology';
+            if (lowerTitle.includes('music') || lowerTitle.includes('fest')) return 'Entertainment';
+            if (lowerTitle.includes('workshop') || lowerTitle.includes('business')) return 'Learning';
+            if (lowerTitle.includes('food') || lowerTitle.includes('wine')) return 'Culinary';
+            return 'General';
+        }
+
+        // Get appropriate default image based on event type
+        function getDefaultEventImage(title) {
+            const lowerTitle = title.toLowerCase();
+            if (lowerTitle.includes('tech') || lowerTitle.includes('conference')) {
+                return 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=500&h=300&fit=crop';
+            } else if (lowerTitle.includes('music') || lowerTitle.includes('festival')) {
+                return 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=500&h=300&fit=crop';
+            } else if (lowerTitle.includes('workshop') || lowerTitle.includes('business')) {
+                return 'https://images.unsplash.com/photo-1515168833906-d2d02d7b2b14?w=500&h=300&fit=crop';
+            } else if (lowerTitle.includes('art') || lowerTitle.includes('exhibition')) {
+                return 'https://images.unsplash.com/photo-1563089145-599997674d42?w=500&h=300&fit=crop';
+            } else if (lowerTitle.includes('food') || lowerTitle.includes('wine')) {
+                return 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=500&h=300&fit=crop';
+            } else {
+                return 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=500&h=300&fit=crop';
+            }
+        }
+
+        // Load booked events on home page
+        async function loadBookedEvents() {
+            try {
+                const response = await fetch('/api/my-bookings');
+                if (!response.ok) {
+                    return; // User not logged in or no bookings
+                }
+
+                const bookings = await response.json();
+
+                if (bookings.length > 0) {
+                    document.getElementById('bookedEventsSection').style.display = 'block';
+
+                    const bookedEventsContainer = document.getElementById('bookedEvents');
+                    bookedEventsContainer.innerHTML = '';
+
+                    // Show only first 3 booked events
+                    bookings.slice(0, 3).forEach(booking => {
+                        const eventDate = new Date(booking.event_date).toLocaleDateString();
+
+                        const eventCard = `
+                        <div class="event-card">
+                            <div class="event-image" style="background-image: url('https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=500&h=300&fit=crop');"></div>
+                            <div class="event-content">
+                                <h3 class="event-title">${booking.event_title}</h3>
+                                <div class="event-meta">
+                                    <span>${eventDate}</span>
+                                    <span>${booking.location}</span>
+                                </div>
+                                <p class="event-description">Booked ${booking.tickets} ticket(s)</p>
+                                <div class="event-actions">
+                                    <span class="booking-status">Total: ₹${booking.total_amount}</span>
+                                    <span class="booking-id">#${booking.id}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                        bookedEventsContainer.innerHTML += eventCard;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading booked events:', error);
+                // Don't show error if user is not logged in
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('🚀 Initializing home page...');
+            loadFeaturedEvents();
+            loadBookedEvents();
+            // Note: auth.js automatically handles authentication UI
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "user",
+    "password": "$2a$10$XB3bgCQQbbDI8v9DYyFPXeGdGMPMMsq36C6NqNNapDCPuI7/hwgRK"
+  },
+  {
+    "id": 2,
+    "name": "Event Organizer",
+    "email": "organizer@example.com",
+    "role": "organizer",
+    "password": "$2a$10$XB3bgCQQbbDI8v9DYyFPXeGdGMPMMsq36C6NqNNapDCPuI7/hwgRK"
+  },
+  {
+    "id": 3,
+    "name": "Saketh Lingerker",
+    "email": "saketh1805@gmail.com",
+    "role": "user",
+    "password": "$2a$10$Et1C.E/qUuESf3Kv7qGBEuNos4BPnRDnEttPG.w9/c6PREKzovbN6"
+  },
+  {
+    "id": 4,
+    "name": "Organizer",
+    "email": "organizer1@example.com",
+    "role": "organizer",
+    "password": "$2a$10$5UabnMA36wshvM/OnIxF8O2yOS2RiJsTdPo7lV/AN1rl83M2zjVDy"
+  },
+  {
+    "id": 5,
+    "name": "Admin User",
+    "email": "admin@eventhub.com",
+    "role": "admin",
+    "password": "$2a$10$T6jsi0OBCdmze1eKvqeBDuWdEowfYHCbds5/udyA6RR5WZXPy.5CG"
+  }
+]
